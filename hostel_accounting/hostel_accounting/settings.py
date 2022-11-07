@@ -18,6 +18,9 @@ INSTALLED_APPS = [
 
     'debug_toolbar',
     'rest_framework',
+
+    'accounts',
+    'goods_accounting'
 ]
 
 MIDDLEWARE = [
@@ -88,3 +91,5 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTH_USER_MODEL = 'accounts.User'
