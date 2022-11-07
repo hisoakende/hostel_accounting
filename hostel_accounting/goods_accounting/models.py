@@ -2,7 +2,14 @@ from django.conf import settings
 from django.db import models
 
 
-class RoommatesGroup(models.Model):
+class NameStrMixin:
+    name = None
+
+    def __str__(self) -> str:
+        return self.name
+
+
+class RoommatesGroup(NameStrMixin, models.Model):
     """
     Модель группы человек, живущих вместе.
 
@@ -12,29 +19,31 @@ class RoommatesGroup(models.Model):
 
     name = models.CharField('название', max_length=63)
     created_at = models.DateField('дата создания', auto_now_add=True)
-    user = models.ManyToManyField(settings.AUTH_USER_MODEL, verbose_name='пользователи')
 
-    def __str__(self) -> str:
-        return f'Группа: {self.name}'
+    class Meta:
+        verbose_name = 'группа человек'
+        verbose_name_plural = 'группы человек'
 
 
-class ProductCategory(models.Model):
+class ProductCategory(NameStrMixin, models.Model):
     """Модель категории товаров. Например, продукты питания или хозяйственнные товары"""
 
     name = models.CharField('название', max_length=63)
 
-    def __str__(self) -> str:
-        return f'Категория: {self.name}'
+    class Meta:
+        verbose_name = 'категория продукта'
+        verbose_name_plural = 'категории продуктов'
 
 
-class Product(models.Model):
+class Product(NameStrMixin, models.Model):
     """Модель товара. Например, молоко или изолента"""
 
     name = models.CharField('название', max_length=63)
     category = models.ForeignKey(ProductCategory, on_delete=models.CASCADE, verbose_name='категория')
 
-    def __str__(self) -> str:
-        return f'Продукт: {self.name}'
+    class Meta:
+        verbose_name = 'продукт'
+        verbose_name_plural = 'продукты'
 
 
 class Purchase(models.Model):
@@ -45,8 +54,12 @@ class Purchase(models.Model):
     datetime = models.DateTimeField('дата и время покупки', auto_now_add=True)
     product = models.ManyToManyField(Product, through='ProductPurchase', verbose_name='продукты')
 
+    class Meta:
+        verbose_name = 'покупка'
+        verbose_name_plural = 'покупки'
+
     def __str__(self) -> str:
-        return f'Покупка: {self.user.username if self.user is not None else "<Аноним>"}, дата и время: {self.datetime}'
+        return f'{self.user}: {self.datetime.strftime("%d.%m.%Y %H:%M:%S")}'
 
 
 class ProductPurchase(models.Model):
@@ -56,5 +69,9 @@ class ProductPurchase(models.Model):
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, verbose_name='товар')
     price = models.IntegerField('цена')
 
+    class Meta:
+        verbose_name = 'покупка товара'
+        verbose_name_plural = 'покупки товаров'
+
     def __str__(self) -> str:
-        return f'Покупка товара: {self.product.name if self.product is not None else "<удален>"}, цена: {self.price}'
+        return f'{self.purchase.user}: {self.product}'
