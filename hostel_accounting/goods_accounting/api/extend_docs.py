@@ -14,7 +14,21 @@ fields_query_parameter = OpenApiParameter(
     'fields',
     type=OpenApiTypes.STR,
     location=OpenApiParameter.QUERY,
-    description='Позволяет указать только те поля, которые следует вернуть',
+    description='Позволяет указать только те поля, которые следует вернуть'
+)
+
+page_param_ru = OpenApiParameter(
+    'page',
+    type=OpenApiTypes.INT,
+    location=OpenApiParameter.QUERY,
+    description='Номер страницы в наборе результатов с разбивкой на страницы'
+)
+
+page_size_param_ru = OpenApiParameter(
+    'page_size',
+    type=OpenApiTypes.INT,
+    location=OpenApiParameter.QUERY,
+    description='Количество записей на одной странице'
 )
 
 """ProductCategoryViewSet"""
@@ -71,6 +85,19 @@ product_fields.examples.append(OpenApiExample(
     value='id,name'
 ))
 
+product_category_fields = OpenApiParameter(
+    'category_fields',
+    type=OpenApiTypes.STR,
+    location=OpenApiParameter.QUERY,
+    description='Позволяет указать у связанной модели \'category\' только те поля, которые следует вернуть',
+    examples=[
+        OpenApiExample(
+            'Возвращаются поля \'id\', \'name\'',
+            value='id,name'
+        )
+    ]
+)
+
 product_response_schema = inline_serializer(
     name='product',
     fields={
@@ -112,6 +139,7 @@ product_retrieve = {
     'description': 'Доступно для всех',
     'parameters': [
         product_fields,
+        product_category_fields,
         id_path_parameter
     ],
     'responses': {
@@ -155,8 +183,16 @@ product_destroy = {
 product_list = {
     'summary': 'Получить продукты',
     'description': 'Доступно для всех',
+    'parameters': [
+        product_fields,
+        product_category_fields,
+        page_param_ru,
+        page_size_param_ru
+    ],
     'responses': {
         200: product_response_schema
     },
-    'examples': [product_get_response]
+    'examples': [
+        product_get_response
+    ]
 }
