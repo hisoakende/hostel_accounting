@@ -24,12 +24,7 @@ class RoommatesGroupManager(models.Manager):
 
 
 class RoommatesGroup(StrMethodMixin, models.Model):
-    """
-    Модель группы человек, живущих вместе.
-
-    Один человек может состоять в нескольких группах сразу.
-    Например, у него ведется учет по группе жителей квартиры и отдельно по его комнате.
-    """
+    """Модель группы человек, живущих вместе"""
 
     name = models.CharField('название', max_length=63)
     created_at = models.DateField('дата создания', auto_now_add=True)
@@ -57,6 +52,7 @@ class Product(StrMethodMixin, models.Model):
     category = models.ForeignKey(ProductCategory, on_delete=models.CASCADE, verbose_name='категория')
 
     class Meta:
+        ordering = ('id',)
         verbose_name = 'продукт'
         verbose_name_plural = 'продукты'
 

@@ -4,16 +4,16 @@ from rest_framework import serializers
 from rest_framework.relations import PrimaryKeyRelatedField
 
 from goods_accounting.models import ProductCategory, Product
-from utils import DynamicFieldsModelSerializer
+from utils import DynamicFieldsMixinModelSerializer
 
 
-class ProductCategorySerializer(DynamicFieldsModelSerializer, serializers.ModelSerializer):
+class ProductCategorySerializer(DynamicFieldsMixinModelSerializer, serializers.ModelSerializer):
     class Meta:
         model = ProductCategory
         fields = ('id', 'name')
 
 
-class ProductSerializer(DynamicFieldsModelSerializer, serializers.ModelSerializer):
+class ProductSerializer(DynamicFieldsMixinModelSerializer, serializers.ModelSerializer):
     category = PrimaryKeyRelatedField(queryset=ProductCategory.objects.all())
 
     class Meta:

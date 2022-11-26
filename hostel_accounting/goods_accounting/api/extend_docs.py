@@ -4,31 +4,13 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, OpenApiExample, inline_serializer
 from rest_framework import serializers
 
-id_path_parameter = OpenApiParameter(
-    'id',
-    type=OpenApiTypes.INT,
-    location=OpenApiParameter.PATH
-)
+import extend_docs_global
 
 fields_query_parameter = OpenApiParameter(
     'fields',
     type=OpenApiTypes.STR,
     location=OpenApiParameter.QUERY,
     description='Позволяет указать только те поля, которые следует вернуть'
-)
-
-page_param_ru = OpenApiParameter(
-    'page',
-    type=OpenApiTypes.INT,
-    location=OpenApiParameter.QUERY,
-    description='Номер страницы в наборе результатов с разбивкой на страницы'
-)
-
-page_size_param_ru = OpenApiParameter(
-    'page_size',
-    type=OpenApiTypes.INT,
-    location=OpenApiParameter.QUERY,
-    description='Количество записей на одной странице'
 )
 
 """ProductCategoryViewSet"""
@@ -49,7 +31,7 @@ product_category_retrieve = {
     'description': 'Доступно для всех',
     'parameters': [
         product_category_fields,
-        id_path_parameter
+        extend_docs_global.id_path_parameter
     ]
 }
 
@@ -57,7 +39,7 @@ product_category_update = {
     'summary': 'Обновить категорию',
     'description': 'Доступно только для администраторов',
     'parameters': [
-        id_path_parameter
+        extend_docs_global.id_path_parameter
     ]
 }
 
@@ -65,7 +47,7 @@ product_category_destroy = {
     'summary': 'Удалить категорию',
     'description': 'Доступно только для администраторов',
     'parameters': [
-        id_path_parameter
+        extend_docs_global.id_path_parameter
     ]
 }
 
@@ -140,7 +122,7 @@ product_retrieve = {
     'parameters': [
         product_fields,
         product_category_fields,
-        id_path_parameter
+        extend_docs_global.id_path_parameter
     ],
     'responses': {
         200: product_response_schema
@@ -152,7 +134,7 @@ product_update = {
     'summary': 'Обновить продукт',
     'description': 'Доступно для всех',
     'parameters': [
-        id_path_parameter
+        extend_docs_global.id_path_parameter
     ],
     'responses': {
         200: product_response_schema
@@ -164,19 +146,21 @@ product_partial_update = {
     'summary': 'Частично обновить продукт',
     'description': 'Доступно для всех',
     'parameters': [
-        id_path_parameter
+        extend_docs_global.id_path_parameter
     ],
     'responses': {
         200: product_response_schema
     },
-    'examples': [product_get_response]
+    'examples': [
+        product_get_response
+    ]
 }
 
 product_destroy = {
     'summary': 'Удалить продукт',
     'description': 'Доступно для всех',
     'parameters': [
-        id_path_parameter
+        extend_docs_global.id_path_parameter
     ]
 }
 
@@ -186,8 +170,8 @@ product_list = {
     'parameters': [
         product_fields,
         product_category_fields,
-        page_param_ru,
-        page_size_param_ru
+        extend_docs_global.page_param_ru,
+        extend_docs_global.page_size_param_ru
     ],
     'responses': {
         200: product_response_schema
