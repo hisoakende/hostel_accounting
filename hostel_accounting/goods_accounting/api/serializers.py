@@ -1,32 +1,45 @@
-from typing import OrderedDict, Any
-
 from rest_framework import serializers
-from rest_framework.relations import PrimaryKeyRelatedField
 
-from goods_accounting.models import ProductCategory, Product
-from utils import DynamicFieldsMixinModelSerializer
+from accounts.api.serializers import UserSerializer
+from goods_accounting.models import ProductCategory, Product, Purchase, ProductPurchase
+from utils import DynamicFieldsSerializerMixin, GetObjectByIdFromRequestSerializerMixin, \
+    ChangeFieldsInDeepSerializersMixin
 
 
-class ProductCategorySerializer(DynamicFieldsMixinModelSerializer, serializers.ModelSerializer):
+class ProductCategorySerializer(GetObjectByIdFromRequestSerializerMixin, DynamicFieldsSerializerMixin,
+                                serializers.ModelSerializer):
     class Meta:
         model = ProductCategory
         fields = ('id', 'name')
 
 
-class ProductSerializer(DynamicFieldsMixinModelSerializer, serializers.ModelSerializer):
-    category = PrimaryKeyRelatedField(queryset=ProductCategory.objects.all())
+class ProductSerializer(DynamicFieldsSerializerMixin, serializers.ModelSerializer):
+    category = ProductCategorySerializer(validate_by_id=True)
 
     class Meta:
         model = Product
         fields = ('id', 'name', 'category')
+        fields_serializer_data = (('category_fields', ('category',)),)
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        self.category_fields = kwargs.pop('category_fields', None)
-        super().__init__(*args, **kwargs)
 
-    def to_representation(self, instance: Product) -> OrderedDict:
-        response = super().to_representation(instance)
-        if response.get('category') is not None:
-            category = ProductCategory.objects.get(pk=response['category'])
-            response['category'] = ProductCategorySerializer(category, fields=self.category_fields).data
-        return response
+class ProductPurchaseSerializer(GetObjectByIdFromRequestSerializerMixin, DynamicFieldsSerializerMixin,
+                                serializers.ModelSerializer):
+    id = serializers.ReadOnlyField(source='product.id')
+    name = serializers.ReadOnlyField(source='product.name')
+    category = ProductCategorySerializer(source='product.category')
+
+    class Meta:
+        model = ProductPurchase
+        fields = ('id', 'name', 'price', 'category')
+
+
+class PurchaseSerializer(ChangeFieldsInDeepSerializersMixin, DynamicFieldsSerializerMixin, serializers.ModelSerializer):
+    user = UserSerializer()
+    products = ProductPurchaseSerializer(source='productpurchase_set', many=True, validate_by_id=True)
+
+    class Meta:
+        model = Purchase
+        fields = ('id', 'datetime', 'user', 'products')
+        fields_serializer_data = (('user_fields', ('user',)),
+                                  ('product_fields', ('products',)),
+                                  ('product_category_fields', ('products', 'category')))

@@ -8,8 +8,8 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from goods_accounting.api import extend_docs
-from goods_accounting.api.serializers import ProductCategorySerializer, ProductSerializer
-from goods_accounting.models import ProductCategory, Product
+from goods_accounting.api.serializers import ProductCategorySerializer, ProductSerializer, PurchaseSerializer
+from goods_accounting.models import ProductCategory, Product, Purchase
 from paginations import DefaultPagination
 from permissions import ReadOnly
 from utils import get_default_retrieve_response, get_all_fields_from_request, \
@@ -76,3 +76,39 @@ class ProductViewSet(ModelViewSet):
     @extend_schema(**extend_docs.product_list)
     def list(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         return get_default_list_response_with_pagination(request, self, ('fields', 'category_fields'))
+
+
+class PurchaseViewSet(ModelViewSet):
+    queryset = Purchase.objects.all()
+    serializer_class = PurchaseSerializer
+    permission_classes = (IsAdminUser,)
+    pagination_class = DefaultPagination
+
+    def perform_create(self, serializer: PurchaseSerializer) -> None:
+        serializer.save(user=self.request.user)
+
+    @extend_schema()
+    def create(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        return super().create(request, *args, **kwargs)
+
+    @extend_schema()
+    def retrieve(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        return get_default_retrieve_response(request, self, (
+            'fields', 'user_fields', 'product_fields', 'product_category_fields'))
+
+    @extend_schema()
+    def update(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        return super().update(request, *args, **kwargs)
+
+    @extend_schema()
+    def partial_update(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        return super().partial_update(request, *args, **kwargs)
+
+    @extend_schema()
+    def destroy(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        return super().destroy(request, *args, **kwargs)
+
+    @extend_schema()
+    def list(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        return get_default_list_response_with_pagination(request, self, (
+            'fields', 'user_fields', 'product_fields', 'product_category_fields'))

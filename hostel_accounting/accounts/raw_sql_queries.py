@@ -7,6 +7,6 @@ all_group_purchases_query = '''
                     ON purchase.id = product_purchase.purchase_id
                 JOIN goods_accounting_product AS product
                     ON product_purchase.product_id = product.id
-                JOIN goods_accounting_roommatesgroup AS roommates_group
+                JOIN accounts_roommatesgroup AS roommates_group
                     ON roommates_group.id = u.roommates_group_id
             WHERE roommates_group.id = %s;'''

@@ -1,38 +1,7 @@
-from typing import Union
-
 from django.conf import settings
 from django.db import models
-from django.db.models.query import RawQuerySet
 
-from goods_accounting.raw_sql_queries import all_group_purchases_query
-
-
-class StrMethodMixin:
-
-    def __str__(self) -> str:
-        return self.name
-
-
-class RoommatesGroupManager(models.Manager):
-
-    def get_all_purchases(self, group: Union[int, 'RoommatesGroup']) -> RawQuerySet:
-        """Метод возвращает покупки всех членов комнаты"""
-
-        if isinstance(group, RoommatesGroup):
-            group = group.pk
-        return self.raw(all_group_purchases_query, (group,))
-
-
-class RoommatesGroup(StrMethodMixin, models.Model):
-    """Модель группы человек, живущих вместе"""
-
-    name = models.CharField('название', max_length=63)
-    created_at = models.DateField('дата создания', auto_now_add=True)
-    objects = RoommatesGroupManager()
-
-    class Meta:
-        verbose_name = 'группа человек'
-        verbose_name_plural = 'группы человек'
+from utils import StrMethodMixin
 
 
 class ProductCategory(StrMethodMixin, models.Model):
@@ -63,9 +32,10 @@ class Purchase(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True,
                              verbose_name='пользователь')
     datetime = models.DateTimeField('дата и время покупки', auto_now_add=True)
-    product = models.ManyToManyField(Product, through='ProductPurchase', verbose_name='продукты')
+    products = models.ManyToManyField(Product, through='ProductPurchase', verbose_name='продукты')
 
     class Meta:
+        ordering = ('id',)
         verbose_name = 'покупка'
         verbose_name_plural = 'покупки'
 
@@ -81,8 +51,9 @@ class ProductPurchase(models.Model):
     price = models.IntegerField('цена')
 
     class Meta:
+        ordering = ('-id',)
         verbose_name = 'покупка товара'
         verbose_name_plural = 'покупки товаров'
 
     def __str__(self) -> str:
-        return f'{self.purchase.user}: {self.product}'
+        return f'{self.purchase.user}: {self.product} ({self.price})'
