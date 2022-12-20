@@ -1,4 +1,4 @@
-from typing import Any, Optional, Iterable, Sequence
+from typing import Any, Optional, Iterable, Sequence, Type
 
 from django.db.models import Model
 from rest_framework import status
@@ -20,6 +20,7 @@ class DynamicFieldsSerializerMixin:
     """Примесь к сериализаторам, позволяющая динамически изменять требуемые в ответе поля"""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
+        DynamicFieldsSerializerMixin.__doc__ = None
         fields = kwargs.pop('fields', None)
         super().__init__(*args, **kwargs)
         self.change_fields(fields)
@@ -39,24 +40,22 @@ class GetObjectByIdFromRequestSerializerMixin:
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
+        GetObjectByIdFromRequestSerializerMixin.__doc__ = None
         self.validate_by_id = kwargs.pop('validate_by_id', False)
         super().__init__(*args, **kwargs)
 
     @staticmethod
-    def validate_type(data: Any) -> None:
+    def val(data: Any) -> None:
         if type(data) is not int:
             raise ValidationError('Поле должно быть integer')
 
     def get_obj(self, pk: int) -> Model:
-        obj = self.Meta.model.objects.filter(pk=pk)
-        if not obj.exists():
-            raise ValidationError('Такой объект не существует')
-        return obj[0]
+        return get_obj_by_pk(self.Meta.model, pk)
 
     def to_internal_value(self, data: Any) -> Model:
         if not self.validate_by_id:
             return super().to_internal_value(data)
-        self.validate_type(data)
+        self.val(data)
         return self.get_obj(data)
 
 
@@ -64,6 +63,7 @@ class ChangeFieldsInDeepSerializersMixin:
     """Примесь к сериализаторам, позволяющая изменять поля сериализаторов-полей"""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
+        ChangeFieldsInDeepSerializersMixin.__doc__ = None
         query_fields_for_many_serializers = self.get_query_fields(kwargs)
         super().__init__(*args, **kwargs)
         self.change_fields_in_depth_serializer(query_fields_for_many_serializers)
@@ -148,3 +148,12 @@ def change_fields_in_depth_serializer(serializer_fields: Sequence, required_fiel
         if not isinstance(main_serializer, Serializer):
             return
     change_fields_in_serializer(serializer_fields[-1], required_fields, main_serializer)
+
+
+def get_obj_by_pk(m: Type[Model], pk: int) -> Model:
+    """Функция, возвращающая объект, если он существует"""
+
+    obj = m.objects.filter(pk=pk)
+    if not obj.exists():
+        raise ValidationError('Такой объект не существует')
+    return obj[0]

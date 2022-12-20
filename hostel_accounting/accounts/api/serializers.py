@@ -1,10 +1,11 @@
 from rest_framework import serializers
 
 from accounts.models import User
-from utils import DynamicFieldsSerializerMixin
+from utils import DynamicFieldsSerializerMixin, GetObjectByIdFromRequestSerializerMixin
 
 
-class UserSerializer(DynamicFieldsSerializerMixin, serializers.ModelSerializer):
+class UserSerializer(GetObjectByIdFromRequestSerializerMixin, DynamicFieldsSerializerMixin,
+                     serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'username', 'roommates_group', 'email', 'first_name',

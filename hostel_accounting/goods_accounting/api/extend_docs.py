@@ -1,4 +1,4 @@
-from copy import copy
+from copy import copy, deepcopy
 
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, OpenApiExample, inline_serializer
@@ -178,5 +178,75 @@ product_list = {
     },
     'examples': [
         product_get_response
+    ]
+}
+
+"""PurchaseViewSet"""
+
+purchase_fields = deepcopy(fields_query_parameter)
+purchase_fields.examples = [
+    OpenApiExample(
+        'Возвращаются поля \'id\', \'user\'',
+        value='id,user'
+    )
+]
+
+purchase_user_fields = OpenApiParameter(
+    'user_fields',
+    type=OpenApiTypes.STR,
+    location=OpenApiParameter.QUERY,
+    description='Позволяет указать у связанной модели \'user\' только те поля, которые следует вернуть',
+    examples=[
+        OpenApiExample(
+            'Возвращаются поля \'username\', \'email\'',
+            value='username,email'
+        )
+    ]
+)
+
+purchase_product_fields = OpenApiParameter(
+    'product_fields',
+    type=OpenApiTypes.STR,
+    location=OpenApiParameter.QUERY,
+    description='Позволяет указать у связанной модели \'user\' только те поля, которые следует вернуть',
+    examples=[
+        OpenApiExample(
+            'Возвращаются поля \'id\', \'name\'',
+            value='id,name'
+        )
+    ]
+)
+
+purchase_product_category_fields = OpenApiParameter(
+    'product_category_fields',
+    type=OpenApiTypes.STR,
+    location=OpenApiParameter.QUERY,
+    description='Позволяет указать у связанной модели \'product\' у поля-модели \'category\' '
+                'только те поля, которые следует вернуть',
+    examples=[
+        OpenApiExample(
+            'Возвращаются поля \'id\', \'name\'',
+            value='id,name'
+        )
+    ]
+)
+
+purchase_create = {
+    'summary': 'Создать покупку',
+    'description': 'Доступно для авторизированных пользователей',
+}
+
+purchase_list = {
+    'summary': 'Получить покупки',
+    'description': 'Доступно для авторизированных пользователй. Если запрос делает администратор,'
+                   'то возвращаются все покупки, если нет, то только покупки пользователя, '
+                   'сделавшего запрос, и его сожителей (при наличии)',
+    'parameters': [
+        purchase_fields,
+        purchase_user_fields,
+        purchase_product_fields,
+        purchase_product_category_fields,
+        extend_docs_global.page_param_ru,
+        extend_docs_global.page_size_param_ru
     ]
 }

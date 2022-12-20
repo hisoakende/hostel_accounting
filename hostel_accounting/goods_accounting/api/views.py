@@ -1,8 +1,9 @@
 from typing import Any
 
 from drf_spectacular.utils import extend_schema
+from rest_framework.decorators import action
 from rest_framework.exceptions import MethodNotAllowed
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
@@ -10,8 +11,10 @@ from rest_framework.viewsets import ModelViewSet
 from goods_accounting.api import extend_docs
 from goods_accounting.api.serializers import ProductCategorySerializer, ProductSerializer, PurchaseSerializer
 from goods_accounting.models import ProductCategory, Product, Purchase
+from goods_accounting.utils import process_deletion_or_addition_product_purchase_request, \
+    delete_product_from_purchase, add_product_to_purchase
 from paginations import DefaultPagination
-from permissions import ReadOnly
+from permissions import ReadOnly, PurchasePermission, IsOwner
 from utils import get_default_retrieve_response, get_all_fields_from_request, \
     get_default_list_response_with_pagination
 
@@ -51,6 +54,7 @@ class ProductCategoryViewSet(ModelViewSet):
 class ProductViewSet(ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    permission_classes = (IsAuthenticated,)
     pagination_class = DefaultPagination
 
     @extend_schema(**extend_docs.product_create)
@@ -81,7 +85,7 @@ class ProductViewSet(ModelViewSet):
 class PurchaseViewSet(ModelViewSet):
     queryset = Purchase.objects.all()
     serializer_class = PurchaseSerializer
-    permission_classes = (IsAdminUser,)
+    permission_classes = (PurchasePermission,)
     pagination_class = DefaultPagination
 
     def perform_create(self, serializer: PurchaseSerializer) -> None:
@@ -97,18 +101,18 @@ class PurchaseViewSet(ModelViewSet):
             'fields', 'user_fields', 'product_fields', 'product_category_fields'))
 
     @extend_schema()
-    def update(self, request: Request, *args: Any, **kwargs: Any) -> Response:
-        return super().update(request, *args, **kwargs)
-
-    @extend_schema()
-    def partial_update(self, request: Request, *args: Any, **kwargs: Any) -> Response:
-        return super().partial_update(request, *args, **kwargs)
-
-    @extend_schema()
     def destroy(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         return super().destroy(request, *args, **kwargs)
 
-    @extend_schema()
+    @extend_schema(**extend_docs.purchase_list)
     def list(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         return get_default_list_response_with_pagination(request, self, (
             'fields', 'user_fields', 'product_fields', 'product_category_fields'))
+
+    @action(detail=True, methods=['post'], permission_classes=(IsOwner | IsAdminUser,))
+    def add_products(self, request: Request, pk: str) -> Response:
+        return process_deletion_or_addition_product_purchase_request(request, pk, add_product_to_purchase)
+
+    @action(detail=True, methods=['post'], permission_classes=(IsOwner | IsAdminUser,))
+    def delete_products(self, request: Request, pk: str) -> Response:
+        return process_deletion_or_addition_product_purchase_request(request, pk, delete_product_from_purchase)

@@ -70,10 +70,10 @@ class GetObjectByIdFromRequestSerializerMixinTest(django.test.TestCase):
         cls.some_obj = cls.some_class()  # без атрибута 'validate_by_id' - обработка происходит по умолчанию
 
     def test_validate_type_raises_exception(self) -> None:
-        self.assertRaises(ValidationError, self.some_obj.validate_type, "test string")
+        self.assertRaises(ValidationError, self.some_obj.val, "test string")
 
     def test_validate_type_returns_none(self) -> None:
-        self.assertIsNone(self.some_obj.validate_type(123))
+        self.assertIsNone(self.some_obj.val(123))
 
     def test_get_obj_raises_exception(self) -> None:
         self.assertRaises(ValidationError, self.some_obj.get_obj, 2)
