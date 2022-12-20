@@ -231,9 +231,51 @@ purchase_product_category_fields = OpenApiParameter(
     ]
 )
 
+create_purchase_request_schema = inline_serializer(
+    name='purchase',
+    fields={
+        'products': serializers.ListField(child=inline_serializer(
+            name='products',
+            fields={
+                "product": serializers.IntegerField(),
+                "price": serializers.IntegerField()
+            }
+        ))
+    }
+)
+
+add_or_delete_product_purchase_schema = serializers.ListSerializer(child=inline_serializer(
+    name='products_purchase',
+    fields={
+        "product": serializers.IntegerField(),
+        "price": serializers.IntegerField()
+    }
+))
+
 purchase_create = {
     'summary': 'Создать покупку',
     'description': 'Доступно для авторизированных пользователей',
+    'request': create_purchase_request_schema
+}
+
+purchase_retrieve = {
+    'summary': 'Получить покупку',
+    'description': 'Доступно для группы пользователя, совершившего покупку, или для администратора',
+    'parameters': [
+        purchase_fields,
+        purchase_user_fields,
+        purchase_product_fields,
+        purchase_product_category_fields,
+        extend_docs_global.id_path_parameter
+    ]
+}
+
+purchase_destroy = {
+    'summary': 'Удалить покупку',
+    'description': 'Доступно для пользователя, совершившего эту покупку, или для администратора',
+    'parameters': [
+        extend_docs_global.id_path_parameter
+    ]
 }
 
 purchase_list = {
@@ -248,5 +290,26 @@ purchase_list = {
         purchase_product_category_fields,
         extend_docs_global.page_param_ru,
         extend_docs_global.page_size_param_ru
+    ]
+}
+
+purchase_add_products = {
+    'summary': 'Добавить продукты в покупку',
+    'description': 'Доступно для пользователя, совершившего эту покупку, или для администратора',
+    'request': add_or_delete_product_purchase_schema,
+    'parameters': [
+        extend_docs_global.id_path_parameter
+    ]
+}
+
+purchase_delete_products = {
+    'summary': 'Удалить продукты из покупки',
+    'description': 'Доступно для пользователя, совершившего эту покупку, или для администратора',
+    'request': add_or_delete_product_purchase_schema,
+    'responses': {
+        204: None
+    },
+    'parameters': [
+        extend_docs_global.id_path_parameter
     ]
 }

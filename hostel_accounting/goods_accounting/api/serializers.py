@@ -40,7 +40,8 @@ class ProductPurchaseSerializer(GetObjectByIdFromRequestSerializerMixin, Dynamic
     def val(data: Any) -> None:
         if type(data) is not dict:
             raise ValidationError('Значения должны быть dict')
-        if not data.get('product', False) or not data.get('price', False):
+        product, price = data.get('product', False), data.get('price', False)
+        if product is False and price is False:
             raise ValidationError('Должны быть поля \'product\' и \'price\'')
         if any(type(element) != int for element in data.values()):
             raise ValidationError('Поля должны быть integer')

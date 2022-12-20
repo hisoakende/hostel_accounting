@@ -1,3 +1,5 @@
+from typing import Any
+
 from rest_framework import permissions
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.request import Request
@@ -28,11 +30,19 @@ class IsOwner(permissions.BasePermission):
         return Purchase.user == request.user
 
 
+class PurchasePermissionGET(permissions.BasePermission):
+
+    def has_permission(self, request: Request, view: APIView) -> bool:
+        return IsAuthenticated.has_permission(self, request, view)
+
+    def has_object_permission(self, request: Request, view: APIView, obj: Any) -> bool:
+        return request.user.roommates_group == obj.user.roommates_group or request.user.is_staff
+
+
 class PurchasePermission(permissions.BasePermission):
     """Класс, который обработывает разрешения для покупок"""
 
-    permissions = {'GET': (IsAuthenticated,), 'POST': (IsAuthenticated,), 'PUT': (IsOwner, IsAdminUser),
-                   'PATCH': (IsOwner, IsAdminUser), 'DELETE': (IsOwner, IsAdminUser)}
+    permissions = {'GET': (PurchasePermissionGET,), 'POST': (IsAuthenticated,), 'DELETE': (IsOwner, IsAdminUser)}
 
     def has_permission(self, request: Request, view: APIView) -> bool:
         if request.method not in self.permissions:

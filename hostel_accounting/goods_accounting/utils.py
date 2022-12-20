@@ -1,12 +1,12 @@
-from typing import Callable
+from typing import Callable, Union, Literal
 
 from django.db import transaction
 from rest_framework import status
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError, ErrorDetail
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from goods_accounting.api.serializers import ProductPurchaseSerializer
+from goods_accounting.api.serializers import ProductPurchaseSerializer, PurchaseSerializer
 from goods_accounting.models import ProductPurchase, Purchase, Product
 from utils import get_obj_by_pk
 
@@ -36,7 +36,19 @@ def process_deletion_or_addition_product_purchase(purchase: Purchase, validated_
             func(purchase, product, price, errors)
 
 
-def process_deletion_or_addition_product_purchase_request(request: Request, pk: str, func: Callable) -> Response:
+def process_errors(errors: Union[dict[str, ErrorDetail], list[ErrorDetail]]) -> list[str]:
+    """
+    Функция, переводящая ошибки при обработке добавления/удаления
+    продукта в покупку в удобный для ответа формат
+    """
+
+    if isinstance(errors, dict):
+        errors = errors.values()
+    return sum(filter(lambda e: e, errors), [])
+
+
+def process_deletion_or_addition_product_purchase_request(request: Request, pk: str,
+                                                          func: Callable, response_code: Literal[200, 204]) -> Response:
     """Функция, обрабатывающая запрос на удаление или для добавление продуктов в покупку"""
 
     if not pk.isdigit():
@@ -50,11 +62,17 @@ def process_deletion_or_addition_product_purchase_request(request: Request, pk: 
 
     product_purchase_data = ProductPurchaseSerializer(data=request.data, validate_by_id=True, many=True)
     if not product_purchase_data.is_valid():
-        errors = sum(filter(lambda e: e, product_purchase_data._errors), [])
+        errors = process_errors(product_purchase_data._errors)
         return Response({'errors': errors}, status=status.HTTP_400_BAD_REQUEST)
 
     errors = []
     process_deletion_or_addition_product_purchase(purchase, product_purchase_data.validated_data, errors, func)
     if errors:
         return Response({'errors': errors}, status=status.HTTP_400_BAD_REQUEST)
-    return Response(status=status.HTTP_204_NO_CONTENT)
+
+    if response_code == 204:
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    purchase.refresh_from_db()
+    serializer = PurchaseSerializer(purchase)
+    return Response(serializer.data)

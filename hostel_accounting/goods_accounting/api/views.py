@@ -1,6 +1,8 @@
 from typing import Any
 
+from django.db.models import QuerySet
 from drf_spectacular.utils import extend_schema
+from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
@@ -37,7 +39,7 @@ class ProductCategoryViewSet(ModelViewSet):
         return super().update(request, *args, **kwargs)
 
     @extend_schema(exclude=True)
-    def partial_update(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+    def partial_update(self, request: Request, *args: Any, **kwargs: Any) -> None:
         raise MethodNotAllowed('patch')
 
     @extend_schema(**extend_docs.product_category_destroy)
@@ -83,7 +85,6 @@ class ProductViewSet(ModelViewSet):
 
 
 class PurchaseViewSet(ModelViewSet):
-    queryset = Purchase.objects.all()
     serializer_class = PurchaseSerializer
     permission_classes = (PurchasePermission,)
     pagination_class = DefaultPagination
@@ -91,28 +92,46 @@ class PurchaseViewSet(ModelViewSet):
     def perform_create(self, serializer: PurchaseSerializer) -> None:
         serializer.save(user=self.request.user)
 
-    @extend_schema()
+    def get_queryset(self) -> QuerySet[Purchase]:
+        if self.request.user.is_staff:
+            return Purchase.objects.all().prefetch_related()
+        return Purchase.objects.filter(user__rommates_group=self.request.user.roommates_group).prefetch_related()
+
+    @extend_schema(**extend_docs.purchase_create)
     def create(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         return super().create(request, *args, **kwargs)
 
-    @extend_schema()
+    @extend_schema(**extend_docs.purchase_retrieve)
     def retrieve(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         return get_default_retrieve_response(request, self, (
             'fields', 'user_fields', 'product_fields', 'product_category_fields'))
 
-    @extend_schema()
+    @extend_schema(exclude=True)
+    def update(self, request: Request, *args: Any, **kwargs: Any) -> None:
+        raise MethodNotAllowed('put')
+
+    @extend_schema(exclude=True)
+    def partial_update(self, request: Request, *args: Any, **kwargs: Any) -> None:
+        raise MethodNotAllowed('patch')
+
+    @extend_schema(**extend_docs.purchase_destroy)
     def destroy(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         return super().destroy(request, *args, **kwargs)
 
     @extend_schema(**extend_docs.purchase_list)
     def list(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        self.queryset = self.get_queryset()
         return get_default_list_response_with_pagination(request, self, (
             'fields', 'user_fields', 'product_fields', 'product_category_fields'))
 
+    @extend_schema(**extend_docs.purchase_add_products)
     @action(detail=True, methods=['post'], permission_classes=(IsOwner | IsAdminUser,))
     def add_products(self, request: Request, pk: str) -> Response:
-        return process_deletion_or_addition_product_purchase_request(request, pk, add_product_to_purchase)
+        return process_deletion_or_addition_product_purchase_request(request, pk, add_product_to_purchase,
+                                                                     status.HTTP_200_OK)
 
+    @extend_schema(**extend_docs.purchase_delete_products)
     @action(detail=True, methods=['post'], permission_classes=(IsOwner | IsAdminUser,))
     def delete_products(self, request: Request, pk: str) -> Response:
-        return process_deletion_or_addition_product_purchase_request(request, pk, delete_product_from_purchase)
+        return process_deletion_or_addition_product_purchase_request(request, pk, delete_product_from_purchase,
+                                                                     status.HTTP_204_NO_CONTENT)
