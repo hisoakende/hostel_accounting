@@ -20,3 +20,10 @@ page_size_param_ru = OpenApiParameter(
     location=OpenApiParameter.QUERY,
     description='Количество записей на одной странице'
 )
+
+fields_query_parameter = OpenApiParameter(
+    'fields',
+    type=OpenApiTypes.STR,
+    location=OpenApiParameter.QUERY,
+    description='Позволяет указать только те поля, которые следует вернуть'
+)

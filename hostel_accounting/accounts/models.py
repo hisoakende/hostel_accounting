@@ -26,6 +26,7 @@ class RoommatesGroup(StrMethodMixin, models.Model):
     objects = RoommatesGroupManager()
 
     class Meta:
+        ordering = ('id',)
         verbose_name = 'группа человек'
         verbose_name_plural = 'группы человек'
 
@@ -33,7 +34,7 @@ class RoommatesGroup(StrMethodMixin, models.Model):
 class User(AbstractUser):
     email = models.EmailField('электронная почта', unique=True)
     roommates_group = models.ForeignKey(RoommatesGroup, on_delete=models.SET_NULL, null=True,
-                                        verbose_name='группа человек')
+                                        verbose_name='группа человек', related_name='users')
 
     class Meta:
         ordering = ('id',)

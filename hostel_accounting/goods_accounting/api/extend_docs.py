@@ -6,20 +6,15 @@ from rest_framework import serializers
 
 import extend_docs_global
 
-fields_query_parameter = OpenApiParameter(
-    'fields',
-    type=OpenApiTypes.STR,
-    location=OpenApiParameter.QUERY,
-    description='Позволяет указать только те поля, которые следует вернуть'
-)
-
 """ProductCategoryViewSet"""
 
-product_category_fields = copy(fields_query_parameter)
-product_category_fields.examples.append(OpenApiExample(
-    'Возвращаются поля \'id\', \'name\'',
-    value='id,name'
-))
+product_category_fields = copy(extend_docs_global.fields_query_parameter)
+product_category_fields.examples = [
+    OpenApiExample(
+        'Возвращаются поля \'id\', \'name\'',
+        value='id,name'
+    )
+]
 
 product_category_create = {
     'summary': 'Создать категорию',
@@ -61,17 +56,19 @@ product_category_list = {
 
 """ProductViewSet"""
 
-product_fields = copy(fields_query_parameter)
-product_fields.examples.append(OpenApiExample(
-    'Возвращаются поля \'id\', \'name\'',
-    value='id,name'
-))
+product_fields = copy(extend_docs_global.fields_query_parameter)
+product_fields.examples = [
+    OpenApiExample(
+        'Возвращаются поля \'id\', \'name\'',
+        value='id,name'
+    )
+]
 
 product_category_fields = OpenApiParameter(
     'category_fields',
     type=OpenApiTypes.STR,
     location=OpenApiParameter.QUERY,
-    description='Позволяет указать у связанной модели \'category\' только те поля, которые следует вернуть',
+    description='Позволяет указать у связанной модели \'product_category\' только те поля, которые следует вернуть',
     examples=[
         OpenApiExample(
             'Возвращаются поля \'id\', \'name\'',
@@ -183,7 +180,7 @@ product_list = {
 
 """PurchaseViewSet"""
 
-purchase_fields = deepcopy(fields_query_parameter)
+purchase_fields = deepcopy(extend_docs_global.fields_query_parameter)
 purchase_fields.examples = [
     OpenApiExample(
         'Возвращаются поля \'id\', \'user\'',
@@ -208,7 +205,7 @@ purchase_product_fields = OpenApiParameter(
     'product_fields',
     type=OpenApiTypes.STR,
     location=OpenApiParameter.QUERY,
-    description='Позволяет указать у связанной модели \'user\' только те поля, которые следует вернуть',
+    description='Позволяет указать у связанной модели \'product\' только те поля, которые следует вернуть',
     examples=[
         OpenApiExample(
             'Возвращаются поля \'id\', \'name\'',
