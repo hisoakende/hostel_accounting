@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.db import models
 
-from utils import StrMethodMixin
+from hostel_accounting.utils import StrMethodMixin
 
 
 class ProductCategory(StrMethodMixin, models.Model):
@@ -44,7 +44,7 @@ class Purchase(models.Model):
 
 
 class ProductPurchase(models.Model):
-    """Промежуточная таблица между моделью покупки и моделью товара"""
+    """Промежуточная таблица между моделью покпки и моделью товара"""
 
     purchase = models.ForeignKey(Purchase, on_delete=models.CASCADE, verbose_name='покупка')
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, verbose_name='товар')

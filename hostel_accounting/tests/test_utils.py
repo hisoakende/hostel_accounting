@@ -5,9 +5,9 @@ from django.test import RequestFactory
 from rest_framework.fields import IntegerField
 
 from accounts.models import User
-from goods_accounting.api.serializers import PurchaseSerializer, ProductPurchaseSerializer
+from hostel_accounting.serializers import PurchaseSerializer, ProductPurchaseSerializer
 from goods_accounting.models import ProductCategory, Product, Purchase
-from utils import *
+from hostel_accounting.utils import *
 
 
 class DynamicFieldsMixinTest(unittest.TestCase):

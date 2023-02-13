@@ -2,13 +2,12 @@ from typing import Callable, Union, Literal
 
 from django.db import transaction
 from rest_framework import status
-from rest_framework.exceptions import ValidationError, ErrorDetail
+from rest_framework.exceptions import ErrorDetail
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from goods_accounting.api.serializers import ProductPurchaseSerializer, PurchaseSerializer
 from goods_accounting.models import ProductPurchase, Purchase, Product
-from utils import get_obj_by_pk
+from hostel_accounting.serializers import ProductPurchaseSerializer, PurchaseSerializer
 
 
 def add_product_to_purchase(purchase: Purchase, product: Product, price: int, errors: list) -> None:
@@ -47,18 +46,9 @@ def process_errors(errors: Union[dict[str, ErrorDetail], list[ErrorDetail]]) -> 
     return sum(filter(lambda e: e, errors), [])
 
 
-def process_deletion_or_addition_product_purchase_request(request: Request, pk: str,
+def process_deletion_or_addition_product_purchase_request(request: Request, purchase: Purchase,
                                                           func: Callable, response_code: Literal[200, 204]) -> Response:
-    """Функция, обрабатывающая запрос на удаление или для добавление продуктов в покупку"""
-
-    if not pk.isdigit():
-        return Response({'errors': ['Такой покупки не существует']},
-                        status=status.HTTP_400_BAD_REQUEST)
-    try:
-        purchase = get_obj_by_pk(Purchase, int(pk))
-    except ValidationError:
-        return Response({'errors': ['Такой покупки не существует']},
-                        status=status.HTTP_400_BAD_REQUEST)
+    """Функция, обрабатывающая запрос удаления или добавления продуктов в покупку"""
 
     product_purchase_data = ProductPurchaseSerializer(data=request.data, validate_by_id=True, many=True)
     if not product_purchase_data.is_valid():

@@ -3,10 +3,45 @@ from typing import Any
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from accounts.api.serializers import UserSerializer
-from goods_accounting.models import ProductCategory, Product, Purchase, ProductPurchase
-from utils import DynamicFieldsSerializerMixin, GetObjectByIdFromRequestSerializerMixin, \
+from accounts.models import RoommatesGroup, User
+from goods_accounting.models import ProductPurchase, Purchase, Product, ProductCategory
+from hostel_accounting.utils import DynamicFieldsSerializerMixin, GetObjectByIdFromRequestSerializerMixin, \
     ChangeFieldsInDeepSerializersMixin
+
+
+class UserWithoutRoommatesGroupSerializer(DynamicFieldsSerializerMixin, serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'email', 'first_name', 'last_name',
+                  'is_superuser', 'is_staff', 'date_joined', 'last_login')
+
+
+class RoommatesGroupWithoutUsersSerializer(GetObjectByIdFromRequestSerializerMixin, DynamicFieldsSerializerMixin,
+                                           serializers.ModelSerializer):
+    class Meta:
+        model = RoommatesGroup
+        fields = ('id', 'name', 'created_at')
+
+
+class UserSerializer(ChangeFieldsInDeepSerializersMixin, GetObjectByIdFromRequestSerializerMixin,
+                     DynamicFieldsSerializerMixin, serializers.ModelSerializer):
+    roommates_group = RoommatesGroupWithoutUsersSerializer(validate_by_id=True, allow_null=True)
+
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'roommates_group', 'email', 'first_name',
+                  'last_name', 'is_superuser', 'is_staff', 'date_joined', 'last_login')
+        fields_serializer_data = (('roommates_group_fields', ('roommates_group',)),)
+
+
+class RoommatesGroupSerializer(ChangeFieldsInDeepSerializersMixin, DynamicFieldsSerializerMixin,
+                               serializers.ModelSerializer):
+    users = UserWithoutRoommatesGroupSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = RoommatesGroup
+        fields = ('id', 'name', 'created_at', 'users')
+        fields_serializer_data = (('users_fields', ('users',)),)
 
 
 class ProductCategorySerializer(GetObjectByIdFromRequestSerializerMixin, DynamicFieldsSerializerMixin,
@@ -59,6 +94,23 @@ class ProductPurchaseSerializer(GetObjectByIdFromRequestSerializerMixin, Dynamic
         if instance.product is None:
             return {field: instance.price if field == 'price' else None for field in self.fields}
         return super().to_representation(instance)
+
+
+class UserWithHisPurchasesSerializer(DynamicFieldsSerializerMixin, serializers.Serializer):
+    user = UserWithoutRoommatesGroupSerializer(allow_null=True)
+    products = ProductPurchaseSerializer(many=True)
+
+
+class AllGroupsPurchasesSerializer(ChangeFieldsInDeepSerializersMixin, DynamicFieldsSerializerMixin,
+                                   serializers.Serializer):
+    roommates_group = RoommatesGroupWithoutUsersSerializer()
+    users_purchases = UserWithHisPurchasesSerializer(many=True)
+
+    class Meta:
+        fields_serializer_data = (('roommates_group_fields', ('roommates_group',)),
+                                  ('user_fields', ('users_purchases', 'user')),
+                                  ('product_fields', ('users_purchases', 'products')),
+                                  ('product_category_fields', ('users_purchases', 'products', 'category')))
 
 
 class PurchaseSerializer(ChangeFieldsInDeepSerializersMixin, DynamicFieldsSerializerMixin,

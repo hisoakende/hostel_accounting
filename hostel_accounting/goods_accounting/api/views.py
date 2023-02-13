@@ -11,13 +11,13 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from goods_accounting.api import extend_docs
-from goods_accounting.api.serializers import ProductCategorySerializer, ProductSerializer, PurchaseSerializer
 from goods_accounting.models import ProductCategory, Product, Purchase
 from goods_accounting.utils import process_deletion_or_addition_product_purchase_request, \
     delete_product_from_purchase, add_product_to_purchase
-from paginations import DefaultPagination
-from permissions import ReadOnly, PurchasePermission, IsOwner
-from utils import get_default_retrieve_response, get_all_fields_from_request, \
+from hostel_accounting.paginations import DefaultPagination
+from hostel_accounting.permissions import ReadOnly, PurchasePermission, IsOwner
+from hostel_accounting.serializers import ProductCategorySerializer, ProductSerializer, PurchaseSerializer
+from hostel_accounting.utils import get_default_retrieve_response, get_all_fields_from_request, \
     get_default_list_response_with_pagination
 
 
@@ -125,13 +125,15 @@ class PurchaseViewSet(ModelViewSet):
             'fields', 'user_fields', 'product_fields', 'product_category_fields'))
 
     @extend_schema(**extend_docs.purchase_add_products)
-    @action(detail=True, methods=['post'], permission_classes=(IsOwner | IsAdminUser,))
+    @action(detail=True, methods=['post'], permission_classes=(IsOwner | IsAdminUser,), url_path='add-products')
     def add_products(self, request: Request, pk: str) -> Response:
-        return process_deletion_or_addition_product_purchase_request(request, pk, add_product_to_purchase,
+        purchase = self.get_object()
+        return process_deletion_or_addition_product_purchase_request(request, purchase, add_product_to_purchase,
                                                                      status.HTTP_200_OK)
 
     @extend_schema(**extend_docs.purchase_delete_products)
-    @action(detail=True, methods=['post'], permission_classes=(IsOwner | IsAdminUser,))
+    @action(detail=True, methods=['post'], permission_classes=(IsOwner | IsAdminUser,), url_path='delete-products')
     def delete_products(self, request: Request, pk: str) -> Response:
-        return process_deletion_or_addition_product_purchase_request(request, pk, delete_product_from_purchase,
+        purchase = self.get_object()
+        return process_deletion_or_addition_product_purchase_request(request, purchase, delete_product_from_purchase,
                                                                      status.HTTP_204_NO_CONTENT)

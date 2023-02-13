@@ -4,7 +4,7 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, OpenApiExample, inline_serializer
 from rest_framework import serializers
 
-import extend_docs_global
+from hostel_accounting import extend_docs_global
 
 """ProductCategoryViewSet"""
 

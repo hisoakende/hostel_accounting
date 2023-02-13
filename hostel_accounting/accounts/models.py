@@ -5,7 +5,7 @@ from django.db import models
 from django.db.models.query import RawQuerySet
 
 from accounts.raw_sql_queries import all_group_purchases_query
-from utils import StrMethodMixin
+from hostel_accounting.utils import StrMethodMixin
 
 
 class RoommatesGroupManager(models.Manager):

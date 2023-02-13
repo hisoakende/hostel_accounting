@@ -3,7 +3,9 @@ from copy import deepcopy
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiExample, OpenApiParameter
 
-import extend_docs_global
+from goods_accounting.api.extend_docs import purchase_product_fields, purchase_product_category_fields
+from hostel_accounting import extend_docs_global
+from hostel_accounting.serializers import AllGroupsPurchasesSerializer
 
 """UserViewSet"""
 
@@ -140,4 +142,30 @@ roommates_group_destroy = {
     'parameters': [
         extend_docs_global.id_path_parameter
     ]
+}
+
+roommates_group_purchases_fields = deepcopy(extend_docs_global.fields_query_parameter)
+roommates_group_purchases_fields.examples = [
+    OpenApiExample(
+        'Возвращаются поля \'roommates_group\', \'users_purchases\'',
+        value='roommates_group,users_purchases'
+    )
+]
+roommates_group_fields.name = 'roommates_group_fields'
+roommates_group_fields.description = 'Позволяет указать у связанной модели \'roommates_group\' ' \
+                                     'только те поля, которые следует вернуть'
+
+roommates_group_purchases = {
+    'summary': 'Получить все покупки комнаты пользователя',
+    'description': 'Доступно для пользователей, находящихся в группе',
+    'parameters': [
+        roommates_group_purchases_fields,
+        roommates_group_fields,
+        roommates_group_users_fields,
+        purchase_product_fields,
+        purchase_product_category_fields
+    ],
+    'responses': {
+        200: AllGroupsPurchasesSerializer
+    }
 }

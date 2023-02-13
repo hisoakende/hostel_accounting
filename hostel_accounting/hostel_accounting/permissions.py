@@ -74,6 +74,12 @@ class IsAuthenticatedAndWithoutGroup(permissions.BasePermission):
         return IsAuthenticated.has_permission(self, request, view) and request.user.roommates_group is None
 
 
+class IsAuthenticatedAndWithGroup(permissions.BasePermission):
+
+    def has_permission(self, request: Request, view: APIView) -> bool:
+        return not IsAuthenticatedAndWithoutGroup.has_permission(self, request, view)
+
+
 class RoommatesGroupPermission(CustomPermission):
     """Класс, который обрабатывает разрешения для группы сожителей"""
 
